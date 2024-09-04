@@ -1,10 +1,12 @@
 package com.paulo.ecommerceX.domain;
 
+import com.paulo.ecommerceX.domain.dto.ProductRequestDTO;
 import com.paulo.ecommerceX.domain.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -34,6 +36,12 @@ public class Product {
 
     @Setter
     private ProductStatus productStatus = ProductStatus.ACTIVE;
+
+    public Product(ProductRequestDTO data) {
+        this.name = data.name().toUpperCase(Locale.ROOT);
+        this.price = data.price();
+        this.stockQuantity = data.stockQuantity();
+    }
 
     @OneToMany(mappedBy = "id.product")
     private Set<ProductSale> items = new HashSet<>();
