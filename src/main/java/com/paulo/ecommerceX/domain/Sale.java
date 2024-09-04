@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity(name = "tb_sale")
@@ -31,4 +33,22 @@ public class Sale {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    public Sale(Instant saleDate, User user, Set<ProductSale> items, SaleStatus saleStatus) {
+        this.saleDate = saleDate;
+        this.user = user;
+        this.items = items;
+        this.saleStatus = saleStatus;
+    }
+
+    @OneToMany(mappedBy = "id.sale", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductSale> items = new HashSet<>();
+
+    public Double getTotal() {
+        double sum = 0.0;
+        for(ProductSale productSale : items) {
+            sum += productSale.getSubTotal();
+        }
+        return sum;
+    }
 }

@@ -4,6 +4,8 @@ import com.paulo.ecommerceX.domain.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity(name = "tb_product")
@@ -32,4 +34,7 @@ public class Product {
 
     @Setter
     private ProductStatus productStatus = ProductStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "id.product")
+    private Set<ProductSale> items = new HashSet<>();
 }
