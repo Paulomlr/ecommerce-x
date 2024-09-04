@@ -1,4 +1,4 @@
-package com.paulo.ecommerceX.domain.dto;
+package com.paulo.ecommerceX.domain.dto.product;
 
 import com.paulo.ecommerceX.domain.Product;
 

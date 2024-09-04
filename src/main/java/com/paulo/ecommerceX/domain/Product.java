@@ -1,6 +1,6 @@
 package com.paulo.ecommerceX.domain;
 
-import com.paulo.ecommerceX.domain.dto.ProductRequestDTO;
+import com.paulo.ecommerceX.domain.dto.product.ProductRequestDTO;
 import com.paulo.ecommerceX.domain.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
