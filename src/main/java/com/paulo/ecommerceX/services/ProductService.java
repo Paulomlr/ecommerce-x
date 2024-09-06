@@ -8,6 +8,8 @@ import com.paulo.ecommerceX.repositories.ProductRepository;
 import com.paulo.ecommerceX.services.exceptions.ResourceNotFoundException;
 import com.paulo.ecommerceX.services.exceptions.UniqueConstraintViolationException;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,16 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
+    @Cacheable(value = "products")
     public List<ProductResponseDTO> findAll(){
+        System.out.println("Fetching products from database...");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         return productRepository.findAll()
                 .stream()
                 .filter(product -> product.getProductStatus() == ProductStatus.ACTIVE)
@@ -36,6 +47,7 @@ public class ProductService {
         return new ProductResponseDTO(product);
     }
 
+    @CacheEvict(value = "products", allEntries = true)
     public Product insert(Product product){
         if(productRepository.findByName(product.getName().toUpperCase(Locale.ROOT)).isPresent()) {
             throw new UniqueConstraintViolationException("Product already exists.");
@@ -43,6 +55,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @CacheEvict(value = "products", allEntries = true)
     public void delete(UUID id) {
         try {
             productRepository.deleteById(id);
@@ -53,6 +66,7 @@ public class ProductService {
         }
     }
 
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponseDTO update(UUID id, ProductRequestDTO obj) {
         return productRepository.findById(id)
                 .map(product -> {

@@ -19,6 +19,8 @@ import com.paulo.ecommerceX.services.exceptions.ResourceNotFoundException;
 import com.paulo.ecommerceX.services.exceptions.SaleCancellationException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -37,7 +39,16 @@ public class SaleService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
+    @Cacheable(value = "sales")
     public List<SaleResponseDTO> findAll() {
+        System.out.println("Fetching sales from database...");
+
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         return saleRepository.findAll()
                 .stream().map(SaleResponseDTO::new)
                 .toList();
@@ -60,6 +71,7 @@ public class SaleService {
     }
 
     @Transactional
+    @CacheEvict(value = "sales", allEntries = true)
     public Sale insert(SaleRequestDTO saleRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName(); // pegar o login do usuário que vai fazer a venda
@@ -81,6 +93,7 @@ public class SaleService {
         return saleRepository.save(sale);
     }
 
+    @CacheEvict(value = "sales", allEntries = true)
     public void delete(UUID id){
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found. Id: " + id));
@@ -88,6 +101,7 @@ public class SaleService {
     }
 
     @Transactional
+    @CacheEvict(value = "sales", allEntries = true)
     public SaleResponseDTO update(UUID saleId, SaleRequestDTO obj) {
         return saleRepository.findById(saleId)// verifico se a venda existe
                 .map(sale -> {
@@ -141,6 +155,7 @@ public class SaleService {
     }
 
     @Transactional
+    @CacheEvict(value = "sales", allEntries = true)
     public SaleResponseDTO deleteItem(UUID saleId, SaleItemRequestDTO body) {
         Sale sale = saleRepository.findById(saleId) // procura a venda
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found. Id: " + saleId));
@@ -165,6 +180,7 @@ public class SaleService {
     }
 
     @Transactional
+    @CacheEvict(value = "sales", allEntries = true)
     public void cancelSale(UUID id) { // método pro usuário cancelar a venda do usuário mas não apagar do banco de dados
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found. Id: " + id));
