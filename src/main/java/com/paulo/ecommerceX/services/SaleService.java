@@ -19,6 +19,7 @@ import com.paulo.ecommerceX.services.exceptions.ResourceNotFoundException;
 import com.paulo.ecommerceX.services.exceptions.SaleCancellationException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 @Service
 public class SaleService {
 
+    private final CacheManager cacheManager;
     private final SaleRepository saleRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
@@ -90,7 +93,14 @@ public class SaleService {
                         .map(ProductSale::getProduct)
                         .toList()
         );
+
+        clearProductCache(); // limpar o cache de produtos pois vai ser alterado as quantidades do estoque
+
         return saleRepository.save(sale);
+    }
+
+    private void clearProductCache() {
+        Objects.requireNonNull(cacheManager.getCache("products")).clear();
     }
 
     @CacheEvict(value = "sales", allEntries = true)
@@ -151,6 +161,7 @@ public class SaleService {
             }
         }
         sale.setSaleDate(Instant.now());
+        clearProductCache();
         saleRepository.save(sale);
     }
 
@@ -176,6 +187,7 @@ public class SaleService {
             });
         }
         saleRepository.save(sale);
+        clearProductCache();
         return new SaleResponseDTO(sale);
     }
 
@@ -201,6 +213,7 @@ public class SaleService {
             product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
 
         });
+        clearProductCache();
         saleRepository.save(sale);
     }
 
