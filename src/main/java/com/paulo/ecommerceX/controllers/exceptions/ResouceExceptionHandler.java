@@ -10,6 +10,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -111,6 +113,15 @@ public class ResouceExceptionHandler {
         String message = "Incorrect credentials";
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         StandardError standardError = new StandardError(Instant.now(), status.value(), error, message, request.getRequestURI());
+
+        return ResponseEntity.status(status).body(standardError);
+    }
+
+    @ExceptionHandler(InternalAuthenticationServiceException.class)
+    public ResponseEntity<StandardError> handleInternalAuthenticationServiceException(InternalAuthenticationServiceException ex, HttpServletRequest request) {
+        String error = "Not Found";
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        StandardError standardError = new StandardError(Instant.now(), status.value(), error, ex.getMessage(), request.getRequestURI());
 
         return ResponseEntity.status(status).body(standardError);
     }

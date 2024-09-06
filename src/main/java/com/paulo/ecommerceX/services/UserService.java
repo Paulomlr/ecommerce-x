@@ -28,7 +28,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByLogin(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Login already exists."));
+                .orElseThrow(() -> new ResourceNotFoundException("Login does not exist."));
     }
 
     public List<UserResponseDTO> findAll() {
