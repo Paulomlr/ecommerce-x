@@ -4,8 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum SaleStatus {
+    PENDING(1),
     COMPLETED(1),
-    CANCELED(2);
+    CANCELED(3);
 
     private final Integer number;
 
