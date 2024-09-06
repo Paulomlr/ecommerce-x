@@ -41,4 +41,18 @@ public class TokenService {
     private Instant generateExpirationDate() {
         return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
     }
+
+    public String generateResetToken(User user) {
+        Algorithm algorithm = Algorithm.HMAC256(secret);
+
+        return JWT.create()
+                .withIssuer("ecommerceSystem")
+                .withSubject(user.getLogin())
+                .withExpiresAt(generateResetExpirationDate())
+                .sign(algorithm);
+    }
+
+    private Instant generateResetExpirationDate() {
+        return LocalDateTime.now().plusMinutes(15).toInstant(ZoneOffset.of("-03:00"));
+    }
 }
