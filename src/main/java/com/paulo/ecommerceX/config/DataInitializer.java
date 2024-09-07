@@ -66,7 +66,7 @@ public class DataInitializer {
             LocalDateTime saleDate = now.minus(Period.of(0, 1, 5));
             Instant date = saleDate.toInstant(ZoneOffset.UTC);
 
-            if (saleRepository.findById(UUID.fromString("d895f6f1-3bac-47d2-8ef1-e4043f57e2b2")).isEmpty()) {
+            if (saleRepository.findById(UUID.fromString("3e854472-a0fc-4c58-95a7-a8c2a7326aad")).isEmpty()) {
                 Sale sale = new Sale(date, user, productSales, SaleStatus.COMPLETED);
 
                 p1Sale.getId().setSale(sale);

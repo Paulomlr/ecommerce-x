@@ -115,6 +115,9 @@ public class SaleService {
     public SaleResponseDTO update(UUID saleId, SaleRequestDTO obj) {
         return saleRepository.findById(saleId)// verifico se a venda existe
                 .map(sale -> {
+                    if(Instant.now().isAfter(sale.getSaleDate().plusSeconds(24 * 60 * 60))) {
+                        throw new SaleCancellationException("Cannot update an item from sale after 24 hours."); // caso a venda passe de mais de 24h criada, não vai ser possivel deletar um item da venda
+                    }
                     updateData(sale, obj); // chamo updateData passando a venda encontrada e os itens para atualizar
                     Sale updateSale = saleRepository.save(sale);
                     return new SaleResponseDTO(updateSale);
@@ -170,6 +173,10 @@ public class SaleService {
     public SaleResponseDTO deleteItem(UUID saleId, SaleItemRequestDTO body) {
         Sale sale = saleRepository.findById(saleId) // procura a venda
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found. Id: " + saleId));
+
+        if(Instant.now().isAfter(sale.getSaleDate().plusSeconds(24 * 60 * 60))) {
+            throw new SaleCancellationException("Cannot delete an item from sale after 24 hours."); // caso a venda passe de mais de 24h criada, não vai ser possivel deletar um item da venda
+        }
 
         for(DeleteProductSaleRequestDTO item : body.items()) {
             Product product = productRepository.findById(item.productId()) // verifico se o produto existe
