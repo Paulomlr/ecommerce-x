@@ -24,6 +24,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
@@ -137,30 +138,50 @@ public class SaleService {
 
             if(existingProductsId.contains(product.getProductId())) { // verifica se um id de um produto passado no request já existe na venda
 
-                ProductSale existingProductSale = sale.getItems().stream() // busco um ProductSale da venda pelo o id do produto passado no request
+                ProductSale existingProductSale = sale.getItems().stream() // busca um ProductSale da venda pelo o id do produto passado no request
                         .filter(p -> p.getProduct().getProductId().equals(product.getProductId()))
                         .findFirst()
                         .orElseThrow(() -> new ResourceNotFoundException("ProductSale not found for productId: " + product.getProductId()));
 
                 int newQuantity = item.quantity(); // nova quantidade do item na venda
-                int existingQuantity = existingProductSale.getQuantity(); // quantidade antiiga do item na venda
+                int existingQuantity = existingProductSale.getQuantity(); // quantidade antiga do item na venda
 
-                if(newQuantity > existingQuantity) { // verifico se a nova quantidade é maior que a antiga
-                    int quantityDecreased = newQuantity - existingQuantity; // pegea a diferença dessas quantidades
-                    product.setStockQuantity(product.getStockQuantity() - quantityDecreased); // diminuo a quantidade do estoque do produto
+                if(newQuantity > existingQuantity) { // verifica se a nova quantidade é maior que a antiga
+                    int quantityDecreased = newQuantity - existingQuantity; // pega a diferença dessas quantidades
+
+                    if(quantityDecreased > product.getStockQuantity()) { // verifica se no estoque tem produtos para a nova quantidade passada
+                        throw new InsufficientStockException("Insufficient stock available for the requested item: " + product.getName());
+                    }
+                    product.setStockQuantity(product.getStockQuantity() - quantityDecreased); // diminui a quantidade do estoque do produto
+
+                    if(product.getStockQuantity() == 0) { // verifica se depois do aumento da quantidade do produto na venda, o estoque dele é igual a 0
+                        product.setProductStatus(ProductStatus.INACTIVE); // se for igual a zero, o produto fica inativo
+                    }
                 }
-                else if (newQuantity < existingQuantity){ // verifico se a nova quantidade é menor que a antiga
+                else if (newQuantity < existingQuantity){ // verifica se a nova quantidade é menor que a antiga
                     int quantityIncrease = existingQuantity - newQuantity;
-                    product.setStockQuantity(product.getStockQuantity() + quantityIncrease); // aumento a quantidade do estoque do produto
+
+                    if(product.getStockQuantity() == 0) { // verifica antes de devolver os produtos para o estoque, se o estoque estar vazio
+                        product.setProductStatus(ProductStatus.ACTIVE); // se tiver, muda o status para ativo pois a quantidade dele na venda retornará ao estoque
+                    }
+                    product.setStockQuantity(product.getStockQuantity() + quantityIncrease); // aumenta a quantidade do estoque do produto
                 }
 
-                existingProductSale.setQuantity(newQuantity); // modifico o campo quantidade no produtSale
+                existingProductSale.setQuantity(newQuantity); // modifica o campo quantidade no produtSale
             }
             else { // se o id passado não existe na venda, significa que vai ser adicionado na mesma
-                ProductSale productSale = new ProductSale(product, sale, item.quantity()); // crio um novo productSale e adiciono a venda
+                ProductSale productSale = new ProductSale(product, sale, item.quantity()); // cria um novo productSale e adiciono a venda
                 sale.getItems().add(productSale);
 
-                product.setStockQuantity(product.getStockQuantity() - item.quantity()); // diminuo a quantidade do produto no estoque
+                if(item.quantity() > product.getStockQuantity()) { // se a quantidade do item for maior do que a do estoque, lança uma exceção
+                    throw new InsufficientStockException("Insufficient stock available for the requested item: " + product.getName());
+                }
+
+                product.setStockQuantity(product.getStockQuantity() - item.quantity()); // diminui a quantidade do produto no estoque
+
+                if(product.getStockQuantity() == 0) { // verifca se quando diminui o estoque do produto, se o estoque é igual a zero
+                    product.setProductStatus(ProductStatus.INACTIVE); // se for, o produto fica inativo
+                }
             }
         }
         sale.setSaleDate(Instant.now());
@@ -277,15 +298,15 @@ public class SaleService {
     private Set<ProductSale> saveSale(SaleRequestDTO saleRequest) {
         return saleRequest.items().stream()
                 .map(item -> {
-                    Product product = productRepository.findById(item.productId()) // verifico se cada id do produto existe
+                    Product product = productRepository.findById(item.productId()) // verifica se cada id do produto existe
                             .orElseThrow(() -> new ResourceNotFoundException("Product not found. Id: "+ item.productId()));
 
                     if(item.quantity() > product.getStockQuantity()) { // se a quantidade do item for maior do que a do estoque, lança uma exceção
                         throw new InsufficientStockException("Insufficient stock available for the requested item: " + product.getName());
                     }
-                    product.setStockQuantity(product.getStockQuantity() - item.quantity()); // diminuo a quantidade do produto no estoque
+                    product.setStockQuantity(product.getStockQuantity() - item.quantity()); // diminui a quantidade do produto no estoque
 
-                    if(product.getStockQuantity() == 0) { // já verifico se quando diminui o estoque do produto, se o estoque é igual a zero
+                    if(product.getStockQuantity() == 0) { // verifca se quando diminui o estoque do produto, se o estoque é igual a zero
                         product.setProductStatus(ProductStatus.INACTIVE); // se for, o produto fica inativo
                     }
 
