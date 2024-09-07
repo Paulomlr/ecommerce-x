@@ -26,8 +26,6 @@ public class ProductService {
 
     @Cacheable(value = "products")
     public List<ProductResponseDTO> findAllProductsForUser(){
-        System.out.println("Fetching products from database...");
-
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {

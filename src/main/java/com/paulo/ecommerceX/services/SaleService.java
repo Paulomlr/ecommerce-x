@@ -24,7 +24,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
@@ -45,8 +44,6 @@ public class SaleService {
 
     @Cacheable(value = "sales")
     public List<SaleResponseDTO> findAll() {
-        System.out.println("Fetching sales from database...");
-
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
