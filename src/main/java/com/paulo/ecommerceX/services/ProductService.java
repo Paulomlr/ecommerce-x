@@ -25,7 +25,7 @@ public class ProductService {
     private final ProductRepository productRepository;
 
     @Cacheable(value = "products")
-    public List<ProductResponseDTO> findAll(){
+    public List<ProductResponseDTO> findAllProductsForUser(){
         System.out.println("Fetching products from database...");
 
         try {
@@ -37,6 +37,13 @@ public class ProductService {
         return productRepository.findAll()
                 .stream()
                 .filter(product -> product.getProductStatus() == ProductStatus.ACTIVE)
+                .map(ProductResponseDTO::new)
+                .toList();
+    }
+
+    public List<ProductResponseDTO> findAllProductsForAdmin () {
+        return productRepository.findAll()
+                .stream()
                 .map(ProductResponseDTO::new)
                 .toList();
     }

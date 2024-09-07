@@ -22,8 +22,14 @@ public class ProductController {
     private final ProductService service;
 
     @GetMapping
-    public ResponseEntity<List<ProductResponseDTO>> findAll(){
-        List<ProductResponseDTO> productList = service.findAll();
+    public ResponseEntity<List<ProductResponseDTO>> findAllProductsForUser(){
+        List<ProductResponseDTO> productList = service.findAllProductsForUser();
+        return ResponseEntity.ok(productList);
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<List<ProductResponseDTO>> findAllProductsForAdmin(){
+        List<ProductResponseDTO> productList = service.findAllProductsForAdmin();
         return ResponseEntity.ok(productList);
     }
 
